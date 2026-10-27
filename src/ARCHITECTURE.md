@@ -13,10 +13,10 @@ main ──► frameworks ──► adapters ──► usecases ──► entiti
 |---|---|---|
 | `entities` | 1 · Enterprise rules | `Movie`, `Auditorium`, `Seat`, `Showtime`, `Reservation`, `User`, `Role`, `DomainException`. Plain Java. |
 | `usecases.ports.input.<feature>` | 2 · Application rules | One input port per feature (`auth`, `movie`, `auditorium`, `showtime`, `reservation`, `report`), with its request/response records next to it |
-| `usecases.ports.output.<feature>` | 2 | Repository ports per feature; `auth` also holds `IPasswordHasher` and `ITokenIssuer`; `report` holds the report read models |
+| `usecases.ports.output.<feature>` | 2 | Repository ports per feature; `auth` also holds `IPasswordHasher` and `ITokenIssuer`; `report` holds the report read models; `transaction` holds `ITransactionRunner` |
 | `usecases.interactors` | 2 | One interactor per input port |
 | `usecases.exceptions` | 2 | `NotFoundException`, `ConflictException`, `SeatsAlreadyReservedException`, `ForbiddenException`, `AuthenticationFailedException` |
-| `adapters.controllers` | 3 · Interface adapters | Call input ports and pass results through presenters |
+| `adapters.controllers` | 3 · Interface adapters | Translate HTTP request records (`request/*HttpRequest`) into use case requests, call input ports, pass results through presenters |
 | `adapters.presenters.<feature>` | 3 | Presenter + view models per feature (formatted duration, seat map grouped by row, `soldOut`, token type) |
 | `adapters.gateways.<feature>` | 3 | Per feature: `*Gateway` (implements the repository port), `*DataSource` interface for the database, `*Record` |
 | `frameworks.db.entity` | 4 · Frameworks & drivers | JPA `@Entity` classes (`*JpaEntity`) |
@@ -43,7 +43,10 @@ display decision, and the interactors still know nothing about HTTP.
 | No overlapping showtimes in one hall | `ShowtimeInteractor` queries for overlaps (runtime + 15 min cleanup) | `EXCLUDE USING gist (auditorium_id WITH =, tsrange(start_time, end_time) WITH &&)` → 409 |
 | Cancel only upcoming, own reservations | `Reservation.cancel` + ownership check (others get 404) | — |
 | Only admins manage/report/promote | `/api/admin/**` requires `ROLE_ADMIN`; `promoteToAdmin` re-checks the actor | — |
-| Movie with confirmed reservations can't be deleted | `MovieInteractor.delete` | FK constraints |
+| Movie/showtime with confirmed reservations can't be deleted | `MovieInteractor.delete` / `ShowtimeInteractor.delete`, inside one `ITransactionRunner` transaction that also removes cancelled reservations | `fk_reservations_showtime ON DELETE RESTRICT` → `ConflictException` → 409, and the cleanup is rolled back |
+| Movie duration is frozen while it has unfinished showtimes | `MovieInteractor.update` | — |
+| Unique email / auditorium name (ignoring case) | `existsBy…` checks in the interactors | `ux_users_email`, `ux_auditoriums_name_lower` → `ConflictException` → 409 |
+| Use case models don't define the public API | HTTP bodies are `adapters.controllers.request.*HttpRequest`, translated by controllers | ArchUnit rule `webDoesNotBindUseCaseRequests` |
 
 ## Request flow example: `POST /api/reservations`
 
@@ -65,6 +68,7 @@ display decision, and the interactors still know nothing about HTTP.
 
 | Folder | What |
 |---|---|
-| `unit` | Entity rules and interactors with in-memory fakes, no Spring |
+| `unit` | Entity rules and interactors with in-memory fakes, no Spring; config guard against fallback secrets |
+| `integration` | Repository ports against real PostgreSQL: what the database guarantees when a race slips past a use case check |
 | `e2e` | Whole app + real PostgreSQL via Testcontainers: full lifecycle, promotion, 8-thread double-booking race |
 | `architecture` | ArchUnit: the Dependency Rule, plus "no Spring/JPA/Lombok inside entities, usecases or adapters" |

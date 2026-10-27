@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -87,7 +88,7 @@ final class InMemoryRepositories {
 
         @Override
         public List<Movie> findAllById(Collection<Long> ids) {
-            return ids.stream().map(rows::get).filter(m -> m != null).toList();
+            return ids.stream().map(rows::get).filter(Objects::nonNull).toList();
         }
 
         @Override
@@ -143,7 +144,7 @@ final class InMemoryRepositories {
 
         @Override
         public List<Showtime> findAllById(Collection<Long> ids) {
-            return ids.stream().map(rows::get).filter(s -> s != null).toList();
+            return ids.stream().map(rows::get).filter(Objects::nonNull).toList();
         }
 
         @Override
@@ -159,6 +160,11 @@ final class InMemoryRepositories {
                     .filter(s -> s.getAuditoriumId().equals(auditoriumId)
                             && s.getStartTime().isBefore(end) && s.getEndTime().isAfter(start))
                     .toList();
+        }
+
+        @Override
+        public boolean existsUnfinishedForMovie(Long movieId, LocalDateTime now) {
+            return rows.values().stream().anyMatch(s -> s.getMovieId().equals(movieId) && s.getEndTime().isAfter(now));
         }
 
         @Override
@@ -230,6 +236,17 @@ final class InMemoryRepositories {
         @Override
         public boolean existsActiveForMovie(Long movieId) {
             return rows.values().stream().anyMatch(r -> r.isActive()
+                    && showtimes.findById(r.getShowtimeId()).map(s -> s.getMovieId().equals(movieId)).orElse(false));
+        }
+
+        @Override
+        public void deleteCancelledForShowtime(Long showtimeId) {
+            rows.values().removeIf(r -> !r.isActive() && r.getShowtimeId().equals(showtimeId));
+        }
+
+        @Override
+        public void deleteCancelledForMovie(Long movieId) {
+            rows.values().removeIf(r -> !r.isActive()
                     && showtimes.findById(r.getShowtimeId()).map(s -> s.getMovieId().equals(movieId)).orElse(false));
         }
     }

@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local-only Spring config (activates the dev profile on this machine) ###
+/config/application*.yaml

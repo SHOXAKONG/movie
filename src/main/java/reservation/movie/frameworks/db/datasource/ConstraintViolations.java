@@ -4,6 +4,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 final class ConstraintViolations {
 
+    /** Raised when a showtime (or its movie) is deleted while reservations still reference it. */
+    static final String RESERVATIONS_REFERENCE_SHOWTIME = "fk_reservations_showtime";
+
     private ConstraintViolations() {
     }
 

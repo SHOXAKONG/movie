@@ -16,6 +16,7 @@ import reservation.movie.usecases.ports.output.auditorium.IAuditoriumRepository;
 import reservation.movie.usecases.ports.output.movie.IMovieRepository;
 import reservation.movie.usecases.ports.output.reservation.IReservationRepository;
 import reservation.movie.usecases.ports.output.showtime.IShowtimeRepository;
+import reservation.movie.usecases.ports.output.transaction.ITransactionRunner;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -34,14 +35,17 @@ public class ShowtimeInteractor implements IShowtimeInputPort {
     private final IMovieRepository movies;
     private final IAuditoriumRepository auditoriums;
     private final IReservationRepository reservations;
+    private final ITransactionRunner transactions;
     private final Clock clock;
 
     public ShowtimeInteractor(IShowtimeRepository showtimes, IMovieRepository movies,
-                              IAuditoriumRepository auditoriums, IReservationRepository reservations, Clock clock) {
+                              IAuditoriumRepository auditoriums, IReservationRepository reservations,
+                              ITransactionRunner transactions, Clock clock) {
         this.showtimes = showtimes;
         this.movies = movies;
         this.auditoriums = auditoriums;
         this.reservations = reservations;
+        this.transactions = transactions;
         this.clock = clock;
     }
 
@@ -69,11 +73,15 @@ public class ShowtimeInteractor implements IShowtimeInputPort {
 
     @Override
     public void delete(Long showtimeId) {
-        find(showtimeId);
-        if (reservations.existsActiveForShowtime(showtimeId)) {
-            throw new ConflictException("Showtime has confirmed reservations and cannot be deleted");
-        }
-        showtimes.deleteById(showtimeId);
+        transactions.run(() -> {
+            find(showtimeId);
+            if (reservations.existsActiveForShowtime(showtimeId)) {
+                throw new ConflictException("Showtime has confirmed reservations and cannot be deleted");
+            }
+            reservations.deleteCancelledForShowtime(showtimeId);
+            // The database still refuses if a booking slipped in after the check above.
+            showtimes.deleteById(showtimeId);
+        });
     }
 
     @Override

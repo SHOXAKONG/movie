@@ -125,6 +125,18 @@ public class JpaReservationDataSource implements ReservationDataSource {
         return repository.existsConfirmedForMovie(movieId);
     }
 
+    @Override
+    @Transactional
+    public void deleteCancelledForShowtime(Long showtimeId) {
+        repository.deleteCancelledForShowtime(showtimeId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCancelledForMovie(Long movieId) {
+        repository.deleteCancelledForMovie(movieId);
+    }
+
     private static ReservationRecord toRecord(ReservationJpaEntity e) {
         List<SeatRecord> seats = e.getSeats().stream()
                 .map(s -> new SeatRecord(s.getSeatRow(), s.getSeatNumber()))

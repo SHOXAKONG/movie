@@ -13,6 +13,8 @@ public interface ShowtimeJpaRepository extends JpaRepository<ShowtimeJpaEntity, 
     List<ShowtimeJpaEntity> findByStartTimeGreaterThanEqualAndStartTimeLessThanOrderByStartTimeAsc(
             LocalDateTime from, LocalDateTime to);
 
+    boolean existsByMovieIdAndEndTimeAfter(Long movieId, LocalDateTime time);
+
     @Query("""
             select s from ShowtimeJpaEntity s
             where s.auditoriumId = :auditoriumId and s.startTime < :end and s.endTime > :start

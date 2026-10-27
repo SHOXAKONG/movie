@@ -66,6 +66,16 @@ public class ReservationGateway implements IReservationRepository {
         return dataSource.existsActiveForMovie(movieId);
     }
 
+    @Override
+    public void deleteCancelledForShowtime(Long showtimeId) {
+        dataSource.deleteCancelledForShowtime(showtimeId);
+    }
+
+    @Override
+    public void deleteCancelledForMovie(Long movieId) {
+        dataSource.deleteCancelledForMovie(movieId);
+    }
+
     private static List<Reservation> toEntities(List<ReservationRecord> records) {
         return records.stream().map(ReservationGateway::toEntity).toList();
     }

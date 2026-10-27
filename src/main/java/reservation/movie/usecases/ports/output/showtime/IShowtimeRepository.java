@@ -24,5 +24,9 @@ public interface IShowtimeRepository {
 
     List<Showtime> findOverlapping(Long auditoriumId, LocalDateTime start, LocalDateTime end);
 
+    /** True if the movie has a showtime that has not finished at {@code now}. */
+    boolean existsUnfinishedForMovie(Long movieId, LocalDateTime now);
+
+    /** Must throw {@code ConflictException} if any reservation still references the showtime. */
     void deleteById(Long id);
 }

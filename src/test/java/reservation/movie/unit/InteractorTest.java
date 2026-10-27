@@ -23,6 +23,7 @@ import reservation.movie.usecases.ports.input.showtime.ScheduleShowtimeRequest;
 import reservation.movie.usecases.ports.input.showtime.ShowtimeResponse;
 import reservation.movie.usecases.ports.output.auth.IPasswordHasher;
 import reservation.movie.usecases.ports.output.auth.ITokenIssuer;
+import reservation.movie.usecases.ports.output.transaction.ITransactionRunner;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -58,10 +59,13 @@ class InteractorTest {
     };
     private final ITokenIssuer tokens = user -> new ITokenIssuer.IssuedToken("token-" + user.getId(), Instant.EPOCH);
 
+    private final ITransactionRunner transactions = Runnable::run;
+
     private final AuthInteractor auth = new AuthInteractor(users, hasher, tokens);
-    private final MovieInteractor movieUseCases = new MovieInteractor(movies, reservations);
+    private final MovieInteractor movieUseCases =
+            new MovieInteractor(movies, showtimes, reservations, transactions, clock);
     private final ShowtimeInteractor showtimeUseCases =
-            new ShowtimeInteractor(showtimes, movies, auditoriums, reservations, clock);
+            new ShowtimeInteractor(showtimes, movies, auditoriums, reservations, transactions, clock);
     private final ReservationInteractor reservationUseCases =
             new ReservationInteractor(reservations, showtimes, movies, auditoriums, clock);
 
@@ -152,5 +156,50 @@ class InteractorTest {
         assertThat(schedule.getFirst().showtimes()).singleElement()
                 .satisfies(s -> assertThat(s.availableSeats()).isEqualTo(20));
         assertThat(showtimeUseCases.listForDate(NOW.toLocalDate())).isEmpty();
+    }
+
+    @Test
+    void movieDurationIsFrozenWhileItHasUpcomingShowtimes() {
+        Long movieId = showtimeUseCases.get(showtimeId).movieId();
+
+        assertThatThrownBy(() -> movieUseCases.update(movieId, new MovieRequest("Heat", null, null, 200, List.of("Crime"))))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("duration");
+        assertThat(movieUseCases.update(movieId, new MovieRequest("Heat (1995)", null, null, 170, List.of("Crime"))).title())
+                .isEqualTo("Heat (1995)");
+    }
+
+    @Test
+    void movieDurationCanChangeWhenItHasNoUpcomingShowtimes() {
+        Long movieId = movieUseCases.create(new MovieRequest("Alien", null, null, 117, List.of("Horror"))).id();
+
+        assertThat(movieUseCases.update(movieId, new MovieRequest("Alien", null, null, 116, List.of("Horror")))
+                .durationMinutes()).isEqualTo(116);
+    }
+
+    @Test
+    void deletingAShowtimeRemovesItsCancelledReservations() {
+        ReservationResponse r = reservationUseCases.reserve(1L, new ReserveSeatsRequest(showtimeId, List.of("D4")));
+        reservationUseCases.cancel(1L, r.id());
+
+        showtimeUseCases.delete(showtimeId);
+
+        assertThat(showtimes.findById(showtimeId)).isEmpty();
+        assertThat(reservations.findById(r.id())).isEmpty();
+    }
+
+    @Test
+    void deleteRunsInsideOneTransaction() {
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        ITransactionRunner counting = work -> {
+            calls.incrementAndGet();
+            work.run();
+        };
+        Long movieId = showtimeUseCases.get(showtimeId).movieId();
+
+        new ShowtimeInteractor(showtimes, movies, auditoriums, reservations, counting, clock).delete(showtimeId);
+        new MovieInteractor(movies, showtimes, reservations, counting, clock).delete(movieId);
+
+        assertThat(calls).hasValue(2);
     }
 }

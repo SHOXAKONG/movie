@@ -1,5 +1,6 @@
 package reservation.movie.adapters.controllers;
 
+import reservation.movie.adapters.controllers.request.AuditoriumHttpRequest;
 import reservation.movie.usecases.ports.input.auditorium.AuditoriumRequest;
 import reservation.movie.usecases.ports.input.auditorium.AuditoriumResponse;
 import reservation.movie.usecases.ports.input.auditorium.IAuditoriumInputPort;
@@ -17,8 +18,8 @@ public class AuditoriumController {
         this.auditoriums = auditoriums;
     }
 
-    public AuditoriumResponse create(AuditoriumRequest request) {
-        return auditoriums.create(request);
+    public AuditoriumResponse create(AuditoriumHttpRequest body) {
+        return auditoriums.create(new AuditoriumRequest(body.name(), body.rows(), body.seatsPerRow()));
     }
 
     public List<AuditoriumResponse> list() {

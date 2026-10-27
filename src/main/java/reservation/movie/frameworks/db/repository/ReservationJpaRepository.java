@@ -1,6 +1,7 @@
 package reservation.movie.frameworks.db.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import reservation.movie.frameworks.db.entity.ReservationJpaEntity;
@@ -42,4 +43,16 @@ public interface ReservationJpaRepository extends JpaRepository<ReservationJpaEn
             where s.active = true and s.showtimeId in :showtimeIds
             group by s.showtimeId""")
     List<Object[]> countActiveSeats(@Param("showtimeIds") Collection<Long> showtimeIds);
+
+    /** Seat rows go with them through the {@code reservation_seats.reservation_id} ON DELETE CASCADE. */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("delete from ReservationJpaEntity r where r.status = 'CANCELLED' and r.showtimeId = :showtimeId")
+    void deleteCancelledForShowtime(@Param("showtimeId") Long showtimeId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            delete from ReservationJpaEntity r
+            where r.status = 'CANCELLED'
+              and r.showtimeId in (select s.id from ShowtimeJpaEntity s where s.movieId = :movieId)""")
+    void deleteCancelledForMovie(@Param("movieId") Long movieId);
 }

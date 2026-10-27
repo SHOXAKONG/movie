@@ -39,6 +39,7 @@ import reservation.movie.usecases.ports.output.movie.IMovieRepository;
 import reservation.movie.usecases.ports.output.report.IReportRepository;
 import reservation.movie.usecases.ports.output.reservation.IReservationRepository;
 import reservation.movie.usecases.ports.output.showtime.IShowtimeRepository;
+import reservation.movie.usecases.ports.output.transaction.ITransactionRunner;
 
 import java.time.Clock;
 
@@ -111,9 +112,11 @@ public class MovieConfiguration {
     }
 
     @Bean
-    public MovieController movieController(IMovieRepository movies, IReservationRepository reservations,
-                                           MoviePresenter moviePresenter) {
-        return new MovieController(new MovieInteractor(movies, reservations), moviePresenter);
+    public MovieController movieController(IMovieRepository movies, IShowtimeRepository showtimes,
+                                           IReservationRepository reservations, ITransactionRunner transactions,
+                                           MoviePresenter moviePresenter, Clock clock) {
+        return new MovieController(new MovieInteractor(movies, showtimes, reservations, transactions, clock),
+                moviePresenter);
     }
 
     @Bean
@@ -124,10 +127,10 @@ public class MovieConfiguration {
     @Bean
     public ShowtimeController showtimeController(IShowtimeRepository showtimes, IMovieRepository movies,
                                                  IAuditoriumRepository auditoriums,
-                                                 IReservationRepository reservations, MoviePresenter moviePresenter,
-                                                 Clock clock) {
+                                                 IReservationRepository reservations, ITransactionRunner transactions,
+                                                 MoviePresenter moviePresenter, Clock clock) {
         return new ShowtimeController(
-                new ShowtimeInteractor(showtimes, movies, auditoriums, reservations, clock),
+                new ShowtimeInteractor(showtimes, movies, auditoriums, reservations, transactions, clock),
                 new ShowtimePresenter(moviePresenter));
     }
 

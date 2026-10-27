@@ -5,6 +5,8 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
@@ -12,6 +14,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  * frameworks/main -> adapters -> usecases -> entities
  */
 @AnalyzeClasses(packages = "reservation.movie", importOptions = ImportOption.DoNotIncludeTests.class)
+@SuppressWarnings("unused") // the @ArchTest fields are discovered and run reflectively by ArchUnit
 class CleanArchitectureTest {
 
     @ArchTest
@@ -44,4 +47,11 @@ class CleanArchitectureTest {
                     "reservation.movie.adapters..")
             .should().dependOnClassesThat().resideInAnyPackage(
                     "org.springframework..", "jakarta.persistence..", "lombok..");
+
+    /** The HTTP contract lives in adapters.controllers.request; use case input models stay internal. */
+    @ArchTest
+    static final ArchRule webDoesNotBindUseCaseRequests = noClasses()
+            .that().resideInAPackage("reservation.movie.frameworks.web..")
+            .should().dependOnClassesThat(resideInAPackage("reservation.movie.usecases..")
+                    .and(simpleNameEndingWith("Request")));
 }

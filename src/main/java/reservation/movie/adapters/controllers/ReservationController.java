@@ -1,5 +1,6 @@
 package reservation.movie.adapters.controllers;
 
+import reservation.movie.adapters.controllers.request.ReserveSeatsHttpRequest;
 import reservation.movie.adapters.presenters.reservation.ReservationPresenter;
 import reservation.movie.adapters.presenters.reservation.ReservationViewModel;
 import reservation.movie.usecases.ports.input.reservation.IReservationInputPort;
@@ -17,8 +18,8 @@ public class ReservationController {
         this.presenter = presenter;
     }
 
-    public ReservationViewModel reserve(Long userId, ReserveSeatsRequest request) {
-        return presenter.present(reservations.reserve(userId, request));
+    public ReservationViewModel reserve(Long userId, ReserveSeatsHttpRequest body) {
+        return presenter.present(reservations.reserve(userId, new ReserveSeatsRequest(body.showtimeId(), body.seats())));
     }
 
     public List<ReservationViewModel> listForUser(Long userId) {

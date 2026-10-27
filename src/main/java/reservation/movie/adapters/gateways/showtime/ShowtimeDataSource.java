@@ -18,5 +18,8 @@ public interface ShowtimeDataSource {
 
     List<ShowtimeRecord> findOverlapping(Long auditoriumId, LocalDateTime start, LocalDateTime end);
 
+    boolean existsEndingAfter(Long movieId, LocalDateTime time);
+
+    /** Must throw {@code ConflictException} when reservations still reference the showtime. */
     void deleteById(Long id);
 }

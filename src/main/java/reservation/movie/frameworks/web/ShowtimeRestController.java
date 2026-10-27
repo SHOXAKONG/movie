@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reservation.movie.adapters.controllers.ShowtimeController;
+import reservation.movie.adapters.controllers.request.ScheduleShowtimeHttpRequest;
 import reservation.movie.adapters.presenters.showtime.MovieScheduleViewModel;
 import reservation.movie.adapters.presenters.showtime.SeatMapViewModel;
 import reservation.movie.adapters.presenters.showtime.ShowtimeViewModel;
-import reservation.movie.usecases.ports.input.showtime.ScheduleShowtimeRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,7 +47,7 @@ public class ShowtimeRestController {
 
     @PostMapping("/api/admin/showtimes")
     @ResponseStatus(HttpStatus.CREATED)
-    public ShowtimeViewModel schedule(@RequestBody ScheduleShowtimeRequest request) {
+    public ShowtimeViewModel schedule(@RequestBody ScheduleShowtimeHttpRequest request) {
         return controller.schedule(request);
     }
 

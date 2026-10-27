@@ -1,11 +1,13 @@
 package reservation.movie.frameworks.db.datasource;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import reservation.movie.adapters.gateways.auditorium.AuditoriumDataSource;
 import reservation.movie.adapters.gateways.auditorium.AuditoriumRecord;
 import reservation.movie.frameworks.db.entity.AuditoriumJpaEntity;
 import reservation.movie.frameworks.db.repository.AuditoriumJpaRepository;
+import reservation.movie.usecases.exceptions.ConflictException;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +15,8 @@ import java.util.Optional;
 @Component
 @Transactional(readOnly = true)
 public class JpaAuditoriumDataSource implements AuditoriumDataSource {
+
+    private static final String UNIQUE_NAME = "ux_auditoriums_name_lower";
 
     private final AuditoriumJpaRepository repository;
 
@@ -28,7 +32,14 @@ public class JpaAuditoriumDataSource implements AuditoriumDataSource {
         entity.setName(auditorium.name());
         entity.setRowCount(auditorium.rows());
         entity.setSeatsPerRow(auditorium.seatsPerRow());
-        return toRecord(repository.save(entity));
+        try {
+            return toRecord(repository.saveAndFlush(entity));
+        } catch (DataIntegrityViolationException e) {
+            if (ConstraintViolations.isViolationOf(e, UNIQUE_NAME)) {
+                throw new ConflictException("An auditorium named '" + auditorium.name() + "' already exists");
+            }
+            throw e;
+        }
     }
 
     @Override

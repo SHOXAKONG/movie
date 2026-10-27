@@ -1,5 +1,7 @@
 package reservation.movie.adapters.controllers;
 
+import reservation.movie.adapters.controllers.request.LoginHttpRequest;
+import reservation.movie.adapters.controllers.request.RegisterHttpRequest;
 import reservation.movie.adapters.presenters.auth.AuthPresenter;
 import reservation.movie.adapters.presenters.auth.TokenViewModel;
 import reservation.movie.adapters.presenters.auth.UserViewModel;
@@ -17,12 +19,12 @@ public class AuthController {
         this.presenter = presenter;
     }
 
-    public UserViewModel register(RegisterRequest request) {
-        return presenter.present(auth.register(request));
+    public UserViewModel register(RegisterHttpRequest body) {
+        return presenter.present(auth.register(new RegisterRequest(body.email(), body.password(), body.fullName())));
     }
 
-    public TokenViewModel login(LoginRequest request) {
-        return presenter.present(auth.login(request));
+    public TokenViewModel login(LoginHttpRequest body) {
+        return presenter.present(auth.login(new LoginRequest(body.email(), body.password())));
     }
 
     public UserViewModel currentUser(Long userId) {

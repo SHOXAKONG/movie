@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -28,9 +29,9 @@ public class SecurityConfig {
     static final String ROLE_CLAIM = "role";
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
@@ -43,7 +44,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecretKey jwtSigningKey(@Value("${app.jwt.secret}") String secret) {
+    public SecretKey jwtSigningKey(@Value("${app.jwt.secret:}") String secret) {
+        if (secret.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET is not set. Set the JWT_SECRET environment variable "
+                    + "(at least 32 characters), or run locally with the 'dev' profile: the "
+                    + "'MovieApplication (dev)' run configuration in IntelliJ, or ./mvnw spring-boot:run");
+        }
         byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
         if (bytes.length < 32) {
             throw new IllegalStateException("app.jwt.secret must be at least 32 bytes for HS256");

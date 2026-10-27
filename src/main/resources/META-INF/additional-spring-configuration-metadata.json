@@ -1,0 +1,31 @@
+{
+  "properties": [
+    {
+      "name": "app.jwt.secret",
+      "type": "java.lang.String",
+      "description": "HMAC key used to sign and verify access tokens (HS256). Required, at least 32 bytes. Set via JWT_SECRET."
+    },
+    {
+      "name": "app.jwt.ttl",
+      "type": "java.time.Duration",
+      "description": "How long an access token stays valid.",
+      "defaultValue": "2h"
+    },
+    {
+      "name": "app.admin.email",
+      "type": "java.lang.String",
+      "description": "Email of the initial admin seeded on startup. Seeding is skipped when blank."
+    },
+    {
+      "name": "app.admin.password",
+      "type": "java.lang.String",
+      "description": "Password of the initial admin. Required when app.admin.email is set."
+    },
+    {
+      "name": "app.admin.full-name",
+      "type": "java.lang.String",
+      "description": "Display name of the initial admin.",
+      "defaultValue": "Administrator"
+    }
+  ]
+}

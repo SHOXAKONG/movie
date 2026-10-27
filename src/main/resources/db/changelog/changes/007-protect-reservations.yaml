@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-reservations-restrict-showtime-delete
+      author: movie
+      comment: >-
+        Deleting a showtime (directly, or by cascade from its movie) must never silently remove reservations.
+        Cancelled reservations are deleted explicitly by the application; confirmed ones block the delete.
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: reservations
+            constraintName: fk_reservations_showtime
+        - addForeignKeyConstraint:
+            baseTableName: reservations
+            baseColumnNames: showtime_id
+            constraintName: fk_reservations_showtime
+            referencedTableName: showtimes
+            referencedColumnNames: id
+            onDelete: RESTRICT
+  - changeSet:
+      id: 007-auditorium-name-unique-ignoring-case
+      author: movie
+      dbms: postgresql
+      changes:
+        - dropUniqueConstraint:
+            tableName: auditoriums
+            constraintName: ux_auditoriums_name
+        - sql:
+            sql: CREATE UNIQUE INDEX ux_auditoriums_name_lower ON auditoriums (lower(name))

@@ -69,9 +69,22 @@ public class JpaShowtimeDataSource implements ShowtimeDataSource {
     }
 
     @Override
+    public boolean existsEndingAfter(Long movieId, LocalDateTime time) {
+        return repository.existsByMovieIdAndEndTimeAfter(movieId, time);
+    }
+
+    @Override
     @Transactional
     public void deleteById(Long id) {
-        repository.deleteById(id);
+        try {
+            repository.deleteById(id);
+            repository.flush();
+        } catch (DataIntegrityViolationException e) {
+            if (ConstraintViolations.isViolationOf(e, ConstraintViolations.RESERVATIONS_REFERENCE_SHOWTIME)) {
+                throw new ConflictException("Showtime still has reservations and cannot be deleted");
+            }
+            throw e;
+        }
     }
 
     private static ShowtimeRecord toRecord(ShowtimeJpaEntity e) {

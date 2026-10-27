@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import reservation.movie.adapters.controllers.AuditoriumController;
 import reservation.movie.adapters.controllers.AuthController;
 import reservation.movie.adapters.controllers.ReportController;
+import reservation.movie.adapters.controllers.request.AuditoriumHttpRequest;
 import reservation.movie.adapters.presenters.auth.UserViewModel;
 import reservation.movie.adapters.presenters.reservation.ReservationViewModel;
-import reservation.movie.usecases.ports.input.auditorium.AuditoriumRequest;
 import reservation.movie.usecases.ports.input.auditorium.AuditoriumResponse;
 import reservation.movie.usecases.ports.input.report.OccupancyResponse;
 import reservation.movie.usecases.ports.input.report.RevenueReportResponse;
@@ -55,7 +55,7 @@ public class AdminRestController {
 
     @PostMapping("/auditoriums")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuditoriumResponse createAuditorium(@RequestBody AuditoriumRequest request) {
+    public AuditoriumResponse createAuditorium(@RequestBody AuditoriumHttpRequest request) {
         return auditoriumController.create(request);
     }
 

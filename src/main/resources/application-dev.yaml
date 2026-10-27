@@ -1,0 +1,7 @@
+# Local development only. Activated by ./mvnw spring-boot:run (see pom.xml) or SPRING_PROFILES_ACTIVE=dev.
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+  admin:
+    email: ${ADMIN_EMAIL:admin@movie.local}
+    password: ${ADMIN_PASSWORD:admin12345}

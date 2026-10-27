@@ -6,6 +6,7 @@ import java.util.Optional;
 
 public interface IUserRepository {
 
+    /** Must throw {@code ConflictException} if the email is already taken. */
     User save(User user);
 
     Optional<User> findById(Long id);

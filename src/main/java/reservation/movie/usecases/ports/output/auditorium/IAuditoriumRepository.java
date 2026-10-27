@@ -7,6 +7,7 @@ import java.util.Optional;
 
 public interface IAuditoriumRepository {
 
+    /** Must throw {@code ConflictException} if the name is already taken (ignoring case). */
     Auditorium save(Auditorium auditorium);
 
     Optional<Auditorium> findById(Long id);

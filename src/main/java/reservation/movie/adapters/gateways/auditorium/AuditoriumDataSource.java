@@ -5,6 +5,7 @@ import java.util.Optional;
 
 public interface AuditoriumDataSource {
 
+    /** Must throw {@code ConflictException} when the name is already taken (ignoring case). */
     AuditoriumRecord save(AuditoriumRecord auditorium);
 
     Optional<AuditoriumRecord> findById(Long id);

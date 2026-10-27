@@ -43,6 +43,11 @@ public class ShowtimeGateway implements IShowtimeRepository {
     }
 
     @Override
+    public boolean existsUnfinishedForMovie(Long movieId, LocalDateTime now) {
+        return dataSource.existsEndingAfter(movieId, now);
+    }
+
+    @Override
     public void deleteById(Long id) {
         dataSource.deleteById(id);
     }

@@ -1,11 +1,13 @@
 package reservation.movie.frameworks.db.datasource;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import reservation.movie.adapters.gateways.movie.MovieDataSource;
 import reservation.movie.adapters.gateways.movie.MovieRecord;
 import reservation.movie.frameworks.db.entity.MovieJpaEntity;
 import reservation.movie.frameworks.db.repository.MovieJpaRepository;
+import reservation.movie.usecases.exceptions.ConflictException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,7 +63,15 @@ public class JpaMovieDataSource implements MovieDataSource {
     @Override
     @Transactional
     public void deleteById(Long id) {
-        repository.deleteById(id);
+        try {
+            repository.deleteById(id);
+            repository.flush();
+        } catch (DataIntegrityViolationException e) {
+            if (ConstraintViolations.isViolationOf(e, ConstraintViolations.RESERVATIONS_REFERENCE_SHOWTIME)) {
+                throw new ConflictException("Movie still has reservations and cannot be deleted");
+            }
+            throw e;
+        }
     }
 
     private static MovieRecord toRecord(MovieJpaEntity e) {

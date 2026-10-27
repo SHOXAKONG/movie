@@ -20,5 +20,6 @@ public interface MovieDataSource {
 
     List<MovieRecord> findAllById(Collection<Long> ids);
 
+    /** Must throw {@code ConflictException} when reservations still reference one of its showtimes. */
     void deleteById(Long id);
 }

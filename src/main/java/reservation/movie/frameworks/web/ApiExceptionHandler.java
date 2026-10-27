@@ -1,5 +1,6 @@
 package reservation.movie.frameworks.web;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -24,7 +25,7 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
-    public ProblemDetail unreadable(Exception e) {
+    public ProblemDetail unreadable() {
         return problem(HttpStatus.BAD_REQUEST, "Malformed request", "The request body or parameters could not be read");
     }
 
@@ -36,6 +37,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ProblemDetail conflict(ConflictException e) {
         return problem(HttpStatus.CONFLICT, "Conflict", e.getMessage());
+    }
+
+    /** Safety net for constraint violations no data source translated; never leaks SQL details. */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail dataConflict() {
+        return problem(HttpStatus.CONFLICT, "Conflict", "The request conflicts with existing data");
     }
 
     @ExceptionHandler(ForbiddenException.class)

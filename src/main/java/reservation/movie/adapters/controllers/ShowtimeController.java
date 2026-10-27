@@ -1,5 +1,6 @@
 package reservation.movie.adapters.controllers;
 
+import reservation.movie.adapters.controllers.request.ScheduleShowtimeHttpRequest;
 import reservation.movie.adapters.presenters.showtime.MovieScheduleViewModel;
 import reservation.movie.adapters.presenters.showtime.SeatMapViewModel;
 import reservation.movie.adapters.presenters.showtime.ShowtimePresenter;
@@ -20,8 +21,9 @@ public class ShowtimeController {
         this.presenter = presenter;
     }
 
-    public ShowtimeViewModel schedule(ScheduleShowtimeRequest request) {
-        return presenter.present(showtimes.schedule(request));
+    public ShowtimeViewModel schedule(ScheduleShowtimeHttpRequest body) {
+        return presenter.present(showtimes.schedule(
+                new ScheduleShowtimeRequest(body.movieId(), body.auditoriumId(), body.startTime(), body.price())));
     }
 
     public void delete(Long showtimeId) {

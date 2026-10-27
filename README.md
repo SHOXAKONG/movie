@@ -13,8 +13,10 @@ Requires Docker (Spring Boot starts PostgreSQL from `compose.yaml` automatically
 ```
 
 - API docs and a test UI: http://localhost:8080/swagger-ui.html (click **Authorize** and paste a token)
-- Seeded admin: `admin@movie.local` / `admin12345`. Override with `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
-- Set `JWT_SECRET` (at least 32 characters) anywhere other than your own machine.
+- `./mvnw spring-boot:run` uses the `dev` profile ([application-dev.yaml](src/main/resources/application-dev.yaml)), which seeds the admin `admin@movie.local` / `admin12345`. In IntelliJ, use the shared **MovieApplication (dev)** run configuration (from `.run/`), or set the active profile to `dev` yourself. To make every local run use `dev` automatically, create a git-ignored `config/application.yaml` in the project root containing `spring.profiles.active: dev`; Spring Boot reads it when the app starts from that folder.
+- In any other environment there are no fallback values. Set:
+  - `JWT_SECRET` (required, at least 32 characters; the app won't start without it)
+  - `ADMIN_EMAIL` and `ADMIN_PASSWORD` to seed the first admin
 - Two auditoriums are seeded: Hall 1 (8×12) and Hall 2 (6×10).
 
 Tests (needs Docker for the end-to-end test):
@@ -59,4 +61,6 @@ Report date ranges default to 30 days before and after today.
 - A seat can belong to only one active reservation per showtime. A PostgreSQL partial unique index guarantees this even under concurrent requests.
 - 1–10 seats per reservation. Price = showtime price × number of seats.
 - Users can cancel only their own reservations, and only before the showtime starts. Cancelling frees the seats.
-- Movies with confirmed reservations cannot be deleted, which keeps revenue history intact.
+- Movies and showtimes with confirmed reservations cannot be deleted, which keeps revenue history intact. The database enforces this too; cancelled reservations are removed along with them.
+- A movie's duration cannot change while it has showtimes that haven't finished.
+- Emails are unique, and auditorium names are unique ignoring case. Duplicates return 409.

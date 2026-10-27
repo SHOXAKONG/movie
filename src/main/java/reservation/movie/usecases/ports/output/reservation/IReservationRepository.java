@@ -35,4 +35,8 @@ public interface IReservationRepository {
     boolean existsActiveForShowtime(Long showtimeId);
 
     boolean existsActiveForMovie(Long movieId);
+
+    void deleteCancelledForShowtime(Long showtimeId);
+
+    void deleteCancelledForMovie(Long movieId);
 }

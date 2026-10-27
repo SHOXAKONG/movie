@@ -14,9 +14,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import reservation.movie.adapters.controllers.ReservationController;
+import reservation.movie.adapters.controllers.request.ReserveSeatsHttpRequest;
 import reservation.movie.main.MovieApplication;
 import reservation.movie.usecases.exceptions.SeatsAlreadyReservedException;
-import reservation.movie.usecases.ports.input.reservation.ReserveSeatsRequest;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -41,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * the no-overlap constraint and the no-double-booking index are exercised for real.
  */
 @SpringBootTest(classes = MovieApplication.class, properties = {
+        "app.jwt.secret=e2e-test-secret-0123456789abcdef-0123",
         "app.admin.email=admin@test.local",
         "app.admin.password=admin-password",
         "spring.docker.compose.enabled=false"
@@ -153,30 +154,30 @@ class MovieReservationFlowTest {
 
         int threads = 8;
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
-        List<Future<Boolean>> results = new ArrayList<>();
-        for (int i = 0; i < threads; i++) {
-            long userId = id(call(post("/api/auth/register"), null,
-                    "{\"email\":\"racer-%s@test.local\",\"password\":\"password123\"}".formatted(UUID.randomUUID())));
-            Callable<Boolean> attempt = () -> {
-                start.await();
-                try {
-                    reservationController.reserve(userId, new ReserveSeatsRequest(showtimeId, List.of("B2")));
-                    return true;
-                } catch (SeatsAlreadyReservedException e) {
-                    return false;
-                }
-            };
-            results.add(pool.submit(attempt));
-        }
-        start.countDown();
         int successes = 0;
-        for (Future<Boolean> result : results) {
-            if (result.get()) {
-                successes++;
+        try (ExecutorService pool = Executors.newFixedThreadPool(threads)) {
+            List<Future<Boolean>> results = new ArrayList<>();
+            for (int i = 0; i < threads; i++) {
+                long userId = id(call(post("/api/auth/register"), null,
+                        "{\"email\":\"racer-%s@test.local\",\"password\":\"password123\"}".formatted(UUID.randomUUID())));
+                Callable<Boolean> attempt = () -> {
+                    start.await();
+                    try {
+                        reservationController.reserve(userId, new ReserveSeatsHttpRequest(showtimeId, List.of("B2")));
+                        return true;
+                    } catch (SeatsAlreadyReservedException e) {
+                        return false;
+                    }
+                };
+                results.add(pool.submit(attempt));
+            }
+            start.countDown();
+            for (Future<Boolean> result : results) {
+                if (result.get()) {
+                    successes++;
+                }
             }
         }
-        pool.shutdown();
 
         assertThat(successes).isEqualTo(1);
         call(get("/api/showtimes/" + showtimeId + "/seats"), null, null)

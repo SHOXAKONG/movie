@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reservation.movie.adapters.controllers.ReservationController;
+import reservation.movie.adapters.controllers.request.ReserveSeatsHttpRequest;
 import reservation.movie.adapters.presenters.reservation.ReservationViewModel;
-import reservation.movie.usecases.ports.input.reservation.ReserveSeatsRequest;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class ReservationRestController {
 
     @PostMapping("/api/reservations")
     @ResponseStatus(HttpStatus.CREATED)
-    public ReservationViewModel reserve(@AuthenticationPrincipal Jwt jwt, @RequestBody ReserveSeatsRequest request) {
+    public ReservationViewModel reserve(@AuthenticationPrincipal Jwt jwt, @RequestBody ReserveSeatsHttpRequest request) {
         return controller.reserve(CurrentUser.id(jwt), request);
     }
 

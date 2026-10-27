@@ -10,13 +10,13 @@ spring:
 
 app:
   jwt:
-    # Override with JWT_SECRET in any shared or deployed environment (min 32 bytes).
-    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    # Required. Empty fallback on purpose: SecurityConfig refuses to start without it (min 32 bytes).
+    secret: ${JWT_SECRET:}
     ttl: ${JWT_TTL:PT2H}
   admin:
-    # Initial admin seeded on startup if it does not exist yet. Change these outside local dev.
-    email: ${ADMIN_EMAIL:admin@movie.local}
-    password: ${ADMIN_PASSWORD:admin12345}
+    # The initial admin is seeded only when ADMIN_EMAIL is set; ADMIN_PASSWORD is then required.
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
     full-name: ${ADMIN_NAME:Administrator}
 
 springdoc:

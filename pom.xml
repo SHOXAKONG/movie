@@ -28,6 +28,11 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <!-- Newer than the Spring Boot 4.1.2 defaults, to pick up security fixes in transitive dependencies. -->
+        <jackson-bom.version>3.1.8</jackson-bom.version>
+        <jackson-2-bom.version>2.21.8</jackson-2-bom.version>
+        <logback.version>1.6.6</logback.version>
+        <asm.version>9.11.1</asm.version>
     </properties>
     <dependencies>
         <dependency>
@@ -144,11 +149,27 @@
         </dependency>
     </dependencies>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- Test-only: pulled in by json-smart via spring-boot-starter-test. -->
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${asm.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <profiles>
+                        <profile>dev</profile>
+                    </profiles>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

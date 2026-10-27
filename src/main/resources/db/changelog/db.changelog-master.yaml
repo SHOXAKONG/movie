@@ -44,3 +44,6 @@ databaseChangeLog:
   - include:
       file: changes/006-reservations.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/007-protect-reservations.yaml
+      relativeToChangelogFile: true
