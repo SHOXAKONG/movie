@@ -1,0 +1,63 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-showtimes
+      author: movie
+      changes:
+        - createTable:
+            tableName: showtimes
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: movie_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_showtimes_movie
+                    references: movies(id)
+                    deleteCascade: true
+              - column:
+                  name: auditorium_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_showtimes_auditorium
+                    references: auditoriums(id)
+              - column:
+                  name: start_time
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_time
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price
+                  type: NUMERIC(10, 2)
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: showtimes
+            indexName: ix_showtimes_start_time
+            columns:
+              - column:
+                  name: start_time
+  - changeSet:
+      id: 005-showtimes-no-overlap
+      author: movie
+      dbms: postgresql
+      comment: The database refuses two showtimes in the same auditorium whose time ranges overlap.
+      changes:
+        - sql:
+            sql: CREATE EXTENSION IF NOT EXISTS btree_gist
+        - sql:
+            sql: >-
+              ALTER TABLE showtimes ADD CONSTRAINT ex_showtimes_no_overlap
+              EXCLUDE USING gist (auditorium_id WITH =, tsrange(start_time, end_time) WITH &&)

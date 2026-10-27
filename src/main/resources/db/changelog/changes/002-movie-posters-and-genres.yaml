@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-movie-posters-and-genres
+      author: movie
+      changes:
+        - addColumn:
+            tableName: movies
+            columns:
+              - column:
+                  name: poster_url
+                  type: VARCHAR(500)
+        - dropColumn:
+            tableName: movies
+            columnName: genre
+        - createTable:
+            tableName: movie_genres
+            columns:
+              - column:
+                  name: movie_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_movie_genres_movie
+                    references: movies(id)
+                    deleteCascade: true
+              - column:
+                  name: genre
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: movie_genres
+            columnNames: movie_id, genre
+        - createIndex:
+            tableName: movie_genres
+            indexName: ix_movie_genres_genre
+            columns:
+              - column:
+                  name: genre

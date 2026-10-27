@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-auditoriums
+      author: movie
+      changes:
+        - createTable:
+            tableName: auditoriums
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: ux_auditoriums_name
+              - column:
+                  name: row_count
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: seats_per_row
+                  type: INT
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 004-auditoriums-seed
+      author: movie
+      changes:
+        - insert:
+            tableName: auditoriums
+            columns:
+              - column: {name: name, value: Hall 1}
+              - column: {name: row_count, valueNumeric: 8}
+              - column: {name: seats_per_row, valueNumeric: 12}
+        - insert:
+            tableName: auditoriums
+            columns:
+              - column: {name: name, value: Hall 2}
+              - column: {name: row_count, valueNumeric: 6}
+              - column: {name: seats_per_row, valueNumeric: 10}

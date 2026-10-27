@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: movie
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+app:
+  jwt:
+    # Override with JWT_SECRET in any shared or deployed environment (min 32 bytes).
+    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    ttl: ${JWT_TTL:PT2H}
+  admin:
+    # Initial admin seeded on startup if it does not exist yet. Change these outside local dev.
+    email: ${ADMIN_EMAIL:admin@movie.local}
+    password: ${ADMIN_PASSWORD:admin12345}
+    full-name: ${ADMIN_NAME:Administrator}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

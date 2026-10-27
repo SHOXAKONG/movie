@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-movies
+      author: movie
+      changes:
+        - createTable:
+            tableName: movies
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: duration_minutes
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: genre
+                  type: VARCHAR(100)
+  - include:
+      file: changes/002-movie-posters-and-genres.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/003-users.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/004-auditoriums.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/005-showtimes.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/006-reservations.yaml
+      relativeToChangelogFile: true

@@ -1,0 +1,111 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-reservations
+      author: movie
+      changes:
+        - createTable:
+            tableName: reservations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reservations_user
+                    references: users(id)
+              - column:
+                  name: showtime_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reservations_showtime
+                    references: showtimes(id)
+                    deleteCascade: true
+              - column:
+                  name: total_price
+                  type: NUMERIC(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cancelled_at
+                  type: TIMESTAMP
+        - createIndex:
+            tableName: reservations
+            indexName: ix_reservations_user
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: reservations
+            indexName: ix_reservations_showtime
+            columns:
+              - column:
+                  name: showtime_id
+        - createTable:
+            tableName: reservation_seats
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: reservation_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reservation_seats_reservation
+                    references: reservations(id)
+                    deleteCascade: true
+              - column:
+                  name: showtime_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reservation_seats_showtime
+                    references: showtimes(id)
+                    deleteCascade: true
+              - column:
+                  name: seat_row
+                  type: VARCHAR(1)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: seat_number
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 006-reservation-seats-no-double-booking
+      author: movie
+      dbms: postgresql
+      comment: A seat can be held by at most one active (non-cancelled) reservation per showtime.
+      changes:
+        - sql:
+            sql: >-
+              CREATE UNIQUE INDEX ux_reservation_seats_active
+              ON reservation_seats (showtime_id, seat_row, seat_number) WHERE active
